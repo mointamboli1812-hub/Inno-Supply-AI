@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | InnoSupply AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #1a1d20; }
+        .login-card { border: none; border-radius: 16px; background: #ffffff; }
+    </style>
+</head>
+<body class="d-flex align-items-center min-vh-100">
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card login-card shadow p-4">
+                <div class="text-center mb-4">
+                    <h3 class="fw-bold text-dark mb-1"><span class="text-success">Inno</span>Supply</h3>
+                    <span class="badge bg-dark">Operations Desk Login</span>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-danger py-2 small text-center" role="alert">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Username</label>
+                        <input type="text" name="username" class="form-control" placeholder="Enter username" required autocomplete="username">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 fw-bold py-2 shadow-sm">
+                        Sign In to Dashboard
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

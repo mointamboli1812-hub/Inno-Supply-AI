@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Master Registry | InnoSupply AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: radial-gradient(circle at top middle, #1c232b, #0f1319);
+            min-height: 100vh;
+        }
+        .navbar {
+            background-color: #111417 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        /* Unified premium white card styles */
+        .custom-card { 
+            border: 1px solid rgba(255, 255, 255, 0.06); 
+            border-radius: 16px; 
+            background-color: #ffffff;
+            color: #1e293b;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+        /* High-contrast light table panel layout */
+        .directory-panel {
+            background-color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+            color: #0f172a;
+        }
+        /* Crisp row hover interactions */
+        .clickable-row {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .clickable-row:hover {
+            background-color: #f8fafc !important;
+        }
+        /* Standard gray borders for readability */
+        .table td {
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+        /* Clean form inputs */
+        .form-control, .form-select {
+            border: 1px solid #cbd5e1;
+            background-color: #f8fafc;
+            color: #0f172a;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+            background-color: #ffffff;
+        }
+        /* Popup Modal Overrides matching the dark application layout */
+        .modal-content {
+            background-color: #161b22;
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+        }
+        .modal-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .modal-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark mb-5 py-3">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold" href="/">
+            <i class="fa-solid fa-arrow-left me-2 small text-success"></i><span class="text-success">Inno</span>Supply Hub
+        </a>
+    </div>
+</nav>
+
+<div class="container-fluid px-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success alert-dismissible fade show border-0 bg-success bg-opacity-10 text-success mb-4 p-3 rounded-3" role="alert">
+                <i class="fa-solid fa-circle-check me-2 fa-lg"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4 mb-5">
+        <div class="col-xl-4 col-lg-5">
+            
+            <div class="card custom-card p-4 mb-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-success bg-opacity-10 text-success rounded p-2 me-3">
+                        <i class="fa-solid fa-boxes-stacked fa-lg"></i>
+                    </div>
+                    <h5 class="fw-bold m-0 text-dark">Update Material Stock</h5>
+                </div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_stock">
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase mb-1">Select Material</label>
+                        <select name="material_id" class="form-select" required>
+                            {% for item in materials %}
+                            <option value="{{ item.id }}">{{ item.name }} (Current: {{ item.current_stock }} {{ item.unit }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase mb-1">Volume Received</label>
+                        <input type="number" name="new_quantity" class="form-control" placeholder="e.g. 100" min="1" required>
+                    </div>
+                    <button type="submit" class="btn btn-success fw-bold text-dark w-100 py-2.5">
+                        <i class="fa-solid fa-camera me-2"></i>Update Stock
+                    </button>
+                </form>
+            </div>
+
+            <div class="card custom-card p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                        <i class="fa-solid fa-folder-plus fa-lg"></i>
+                    </div>
+                    <h5 class="fw-bold m-0 text-dark">Catalog Fresh Entry</h5>
+                </div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="new_material">
+                    
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted text-uppercase mb-1">Material Name</label>
+                        <input type="text" name="material_name" class="form-control" placeholder="e.g. Steel Pipe" required>
+                    </div>
+                    <div class="row g-2 mb-4">
+                        <div class="col-7">
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-1">Stock Size</label>
+                            <input type="number" name="initial_stock" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label small fw-bold text-muted text-uppercase mb-1">Unit Type</label>
+                            <input type="text" name="unit_type" class="form-control" value="Units" placeholder="e.g. Kg, Mtr">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary fw-bold w-100 py-2.5">
+                        <i class="fa-solid fa-plus me-2"></i>Add New Material
+                    </button>
+                </form>
+            </div>
+
+        </div>
+
+        <div class="col-xl-8 col-lg-7">
+            <div class="directory-panel p-4 h-100">
+                
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                    <div>
+                        <h4 class="fw-bold text-primary m-0"><i class="fa-solid fa-list-check text-primary me-2"></i>Master Material List</h4>
+                        <p class="text-muted small m-0 mt-1">Overview of all active material list. Click any row to view insights.</p>
+                    </div>
+                    <div class="position-relative style-search" style="max-width: 350px; width: 100%;">
+                        <i class="fa-solid fa-magnifying-glass position-absolute top-50 start-0 translate-middle-y text-muted ms-3"></i>
+                        <input type="text" id="directorySearch" class="form-control bg-light border-secondary border-opacity-40 text-dark w-100 ps-5 py-2" placeholder="Search material ...">
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="border-radius: 10px; border: 1px solid #e2e8f0; overflow: hidden;">
+                    <table class="table table-hover align-middle mb-0 text-dark">
+                        <thead>
+                            <tr class="text-secondary border-bottom" style="font-size: 0.8rem; background-color: #f1f5f9; font-weight: 700;">
+                                <th class="py-3 ps-3">MATERIAL NAME</th>
+                                <th class="py-3">UNIT SPECIFICATION</th>
+                                <th class="py-3">CURRENT STOCK LEVEL</th>
+                                <th class="py-3 text-end pe-3">STATUS MARGINS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="directoryTableBody">
+                            {% for item in materials %}
+                            <tr class="clickable-row border-bottom border-light" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#materialDetailModal"
+                                data-name="{{ item.name }}"
+                                data-id="{{ item.id }}"
+                                data-stock="{{ item.current_stock }}"
+                                data-unit="{{ item.unit }}">
+                                <td class="py-3 ps-3 fw-bold text-primary target-name">{{ item.name }}</td>
+                                <td class="py-3"><span class="badge bg-primary bg-opacity-10 text-primary px-2.5 py-1.5 border border-primary border-opacity-10 fw-medium">{{ item.unit }}</span></td>
+                                <td class="py-3 fw-semibold text-dark">{{ item.current_stock }}</td>
+                                <td class="py-3 text-end pe-3">
+                                    {% if item.current_stock < 20 %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 px-3 py-2 fw-semibold">Low Stock Crisis</span>
+                                    {% else %}
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-3 py-2 fw-semibold">Nominal Margins</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted small"><i class="fa-solid fa-box-open d-block fa-2x mb-2 opacity-40"></i>No validated material variants located inside schema models.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="materialDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-white" id="modalMaterialName">Material Analysis</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                
+                <div class="row g-3 text-center mb-4">
+                    <div class="col-6">
+                        <div class="p-3 rounded bg-dark bg-opacity-40 border border-secondary border-opacity-20">
+                            <small class="text-white-50 text-uppercase fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Resource Identifier</small>
+                            <h5 class="fw-bold text-primary m-0" id="modalMaterialId">#0</h5>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded bg-dark bg-opacity-40 border border-secondary border-opacity-20">
+                            <small class="text-white-50 text-uppercase fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">On-Hand Volume</small>
+                            <h5 class="fw-bold text-success m-0" id="modalMaterialStock">0</h5>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="border-secondary border-opacity-20 my-3">
+                
+                <h6 class="fw-bold mb-2 small text-uppercase tracking-wider text-white-50">Predictive System Insights</h6>
+                <div id="modalAlertBox" class="p-3 rounded border">
+                    <span id="modalAlertText" class="small fw-medium"></span>
+                </div>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm px-4 rounded-3 py-2 fw-medium" data-bs-dismiss="modal">Close Insights</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // 1. Live Catalog Directory Search Filter
+    document.getElementById('directorySearch').addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        document.querySelectorAll('#directoryTableBody .clickable-row').forEach(row => {
+            const matName = row.querySelector('.target-name').textContent.toLowerCase();
+            row.style.display = matName.includes(query) ? '' : 'none';
+        });
+    });
+
+    // 2. Dynamic Modal Data Injection Engine with Text-Based Insight Triggers
+    const detailModal = document.getElementById('materialDetailModal');
+    if (detailModal) {
+        detailModal.addEventListener('show.bs.modal', function (event) {
+            const row = event.relatedTarget;
+            const name = row.getAttribute('data-name');
+            const id = row.getAttribute('data-id');
+            const stock = parseInt(row.getAttribute('data-stock'));
+            const unit = row.getAttribute('data-unit');
+            
+            // Map text details
+            document.getElementById('modalMaterialName').innerText = name + ' Analysis';
+            document.getElementById('modalMaterialId').innerText = `#MAT-${id}`;
+            document.getElementById('modalMaterialStock').innerText = `${stock} ${unit}`;
+            
+            const alertBox = document.getElementById('modalAlertBox');
+            const alertText = document.getElementById('modalAlertText');
+            
+            // Text Evaluation Logic
+            if (stock < 20) {
+                // Crisis State Display
+                alertBox.className = "p-3 rounded bg-danger bg-opacity-10 border-danger border-opacity-20 text-danger";
+                alertText.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2 fa-lg"></i><strong>Low Stock Crisis:</strong> Inventory level is critical. Please restock immediately to avoid production bottlenecks.`;
+            } else {
+                // Nominal State Display
+                alertBox.className = "p-3 rounded bg-success bg-opacity-10 border-success border-opacity-20 text-success";
+                alertText.innerHTML = `<i class="fa-solid fa-circle-check me-2 fa-lg"></i><strong>Nominal Margins:</strong> Component levels are completely healthy and ready for active workflow processing.`;
+            }
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InnoSupply AI | Enterprise Command Suite</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f4f6f9; }
+        .card { border: none; border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02); }
+        .kpi-card { border-left: 5px solid #6c757d; transition: transform 0.2s; }
+        .kpi-card:hover { transform: translateY(-3px); }
+        .navbar { background-color: #111417 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+        .btn-logout { color: #ea4c4c; border: 1px solid rgba(234, 76, 76, 0.4); }
+        .btn-logout:hover { background-color: #ea4c4c; color: white; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark mb-4 py-3">
+    <div class="container-fluid px-4">
+        <div class="w-100 d-flex justify-content-between align-items-center">
+            <a class="navbar-brand fw-bold" href="/"><span class="text-success">Inno</span>Supply <span class="badge bg-success text-dark">AI</span></a>
+            <div class="d-flex align-items-center">
+                <span class="navbar-text text-white-50 me-3 d-none d-md-inline-block">Session: <strong class="text-white">{{ request.user.username }}</strong></span>
+                <a href="{% url 'logout' %}" class="btn btn-logout btn-sm px-3 fw-bold">Sign Out</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid px-4">
+    
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-2">
+            <div class="card kpi-card border-primary h-100 p-3">
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Total Orders</small>
+                <h3 class="fw-bold text-primary m-0 mt-2">{{ total_orders }}</h3>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="card kpi-card border-warning h-100 p-3">
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Pending Req.</small>
+                <h3 class="fw-bold text-warning m-0 mt-2">{{ pending_requests }}</h3>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="card kpi-card border-info h-100 p-3">
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">In Progress</small>
+                <h3 class="fw-bold text-info m-0 mt-2">{{ in_progress_requests }}</h3>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="card kpi-card border-success h-100 p-3">
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Completed</small>
+                <h3 class="fw-bold text-success m-0 mt-2">{{ completed_requests }}</h3>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="card kpi-card border-dark h-100 p-3">
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Total Materials</small>
+                <h3 class="fw-bold text-dark m-0 mt-2">{{ total_materials }}</h3>
+            </div>
+        </div>
+        <div class="col-6 col-lg-2">
+            <div class="card kpi-card border-danger h-100 p-3">
+                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Low Stock Items</small>
+                <h3 class="fw-bold text-danger m-0 mt-2">{{ low_stock_materials }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm p-4 bg-white">
+                <h5 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-brain text-success me-2"></i>AI Stock Runways Insights</h5>
+                <div class="row g-3">
+                    {% for alert in ai_alerts %}
+                    <div class="col-md-6">
+                        <div class="alert alert-{{ alert.severity }} mb-0 h-100" role="alert">
+                            <h6 class="alert-heading fw-bold text-capitalize"><i class="fa-solid fa-triangle-exclamation me-2"></i>{{ alert.material }} Running Low!</h6>
+                            <p class="small mb-2">Estimated processing inventory runway metrics match less than <strong>{{ alert.days_left }} Days remaining</strong>.</p>
+                            <hr class="my-2">
+                            <p class="small mb-0 fw-semibold"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Action Suggestion: {{ alert.action }}</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                        <div class="p-3 bg-light rounded text-center text-muted small"><i class="fa-solid fa-circle-check text-success me-2"></i>All workspace metrics are fully balanced. On-hand capacities tracking safely.</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card p-4 bg-white d-flex flex-row justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark">Manage Warehouse</h5>
+                    <p class="text-muted small m-0">Manually restock production resources or review catalog items.</p>
+                </div>
+                <a href="{% url 'update_stock' %}" class="btn btn-primary fw-bold px-3"><i class="fa-solid fa-boxes-stacked me-2"></i>Manage Materials</a>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card p-4 bg-white d-flex flex-row justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark">Purchase Order Scanner</h5>
+                    <p class="text-muted small m-0">Scan incoming supplier documents directly into clean system catalog models.</p>
+                </div>
+                <a href="{% url 'upload_po' %}" class="btn btn-primary fw-bold px-3"><i class="fa-solid fa-camera me-2"></i>Scan Purchase Order</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card p-4 bg-white h-100">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">Order Status Matrix</h6>
+                <div style="height: 240px; position: relative;"><canvas id="orderDoughnutChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 bg-white h-100">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">Monthly Throughput</h6>
+                <div style="height: 240px; position: relative;"><canvas id="monthlyTrendChart"></canvas></div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 bg-white h-100">
+                <h6 class="fw-bold text-muted text-uppercase small mb-3">Inventory Allocation vs. Active Demand</h6>
+                <div style="height: 240px; position: relative;"><canvas id="inventoryDemandChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{{ material_names|json_script:"material-names-data" }}
+{{ days_left_data|json_script:"days-left-data" }}
+{{ bar_colors|json_script:"bar-colors-data" }}
+{{ pending_count|json_script:"pending-count-data" }}
+{{ in_progress_count|json_script:"in-progress-count-data" }}
+{{ shipped_count|json_script:"shipped-count-data" }}
+{{ months_labels|json_script:"months-labels-data" }}
+{{ monthly_orders|json_script:"monthly-orders-data" }}
+
+{{ chart_material_names|json_script:"chart-materials-data" }}
+{{ stock_levels_data|json_script:"stock-levels-data" }}
+{{ demand_levels_data|json_script:"demand-levels-data" }}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Parse basic arrays
+        const pendingCount = parseInt(JSON.parse(document.getElementById('pending-count-data').textContent)) || 0;
+        const inProgressCount = parseInt(JSON.parse(document.getElementById('in-progress-count-data').textContent)) || 0;
+        const shippedCount = parseInt(JSON.parse(document.getElementById('shipped-count-data').textContent)) || 0;
+        const monthsLabels = JSON.parse(document.getElementById('months-labels-data').textContent) || [];
+        const monthlyOrders = JSON.parse(document.getElementById('monthly-orders-data').textContent) || [];
+
+        // Parse Stock Allocation metrics arrays
+        const chartMaterials = JSON.parse(document.getElementById('chart-materials-data').textContent) || [];
+        const stockLevels = JSON.parse(document.getElementById('stock-levels-data').textContent) || [];
+        const demandLevels = JSON.parse(document.getElementById('demand-levels-data').textContent) || [];
+
+        // CHART 1: 3-State Order Doughnut Graph
+        const totalActiveStatus = pendingCount + inProgressCount + shippedCount;
+        const doughnutData = totalActiveStatus === 0 ? [1] : [shippedCount, inProgressCount, pendingCount];
+        const doughnutLabels = totalActiveStatus === 0 ? ['No Data Uploaded'] : ['Completed', 'In Progress', 'Pending'];
+        const doughnutColors = totalActiveStatus === 0 ? ['#cbd5e1'] : ['#198754', '#0dcced', '#ffc107'];
+
+        new Chart(document.getElementById('orderDoughnutChart'), {
+            type: 'doughnut',
+            data: {
+                labels: doughnutLabels,
+                datasets: [{ data: doughnutData, backgroundColor: doughnutColors, borderWidth: 0 }]
+            },
+            options: { 
+                maintainAspectRatio: false, 
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Inter', size: 11, weight: 500 } } } } 
+            }
+        });
+
+        // CHART 2: Dynamic Bar Throughput Engine Graph
+        new Chart(document.getElementById('monthlyTrendChart'), {
+            type: 'bar',
+            data: {
+                labels: monthsLabels,
+                datasets: [{ label: 'Volume Orders', data: monthlyOrders, backgroundColor: '#0d6efd', borderRadius: 6 }]
+            },
+            options: { 
+                maintainAspectRatio: false, 
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 11 } } },
+                    x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } }
+                },
+                plugins: { legend: { display: false } } 
+            }
+        });
+
+        // CHART 3: INVENTORY VS DEMAND ALLOCATION BAR CHART
+        new Chart(document.getElementById('inventoryDemandChart'), {
+            type: 'bar',
+            data: {
+                labels: chartMaterials,
+                datasets: [
+                    {
+                        label: 'On-Hand Stock',
+                        data: stockLevels,
+                        backgroundColor: '#198754', // Green for warehouse supply
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Active Order Demand',
+                        data: demandLevels,
+                        backgroundColor: '#dc3545', // Red for order requirements
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Inter', size: 11 } } },
+                    x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 } } }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Inter', size: 11, weight: 500 } } }
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>
